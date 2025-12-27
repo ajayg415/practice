@@ -1,73 +1,38 @@
-// counters.js — logic for managing named counters
-const counters = {};
-const STORAGE_KEY = 'practice:counters:v1';
+// DEPRECATED: counters.js (archived). The React app uses its own state and
+// persistence. A backup of the original counters implementation is available
+// at `legacy/src/counters.js`.
 
-function save() {
-  try {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(counters));
-    }
-  } catch (err) {
-    // ignore storage errors
-  }
-}
-
+// Provide no-op implementations so accidental imports don't break.
 export function load() {
-  try {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const data = JSON.parse(raw);
-        if (data && typeof data === 'object') {
-          // copy keys
-          for (const k of Object.keys(data)) {
-            const v = Number(data[k]);
-            counters[k] = Number.isFinite(v) ? v : 0;
-          }
-        }
-      }
-    }
-  } catch (err) {
-    // ignore
-  }
+  return;
 }
 
-export function ensureCounter(name) {
-  if (!Object.prototype.hasOwnProperty.call(counters, name)) counters[name] = 0;
+export function ensureCounter() {
+  return;
 }
 
-export function increment(name) {
-  ensureCounter(name);
-  counters[name] += 1;
-  save();
-  return counters[name];
+export function increment() {
+  return 0;
 }
 
-export function decrement(name) {
-  ensureCounter(name);
-  counters[name] = Math.max(0, counters[name] - 1);
-  save();
-  return counters[name];
+export function decrement() {
+  return 0;
 }
 
-export function reset(name) {
-  ensureCounter(name);
-  counters[name] = 0;
-  save();
-  return counters[name];
+export function reset() {
+  return 0;
 }
 
-export function getCount(name) {
-  return Object.prototype.hasOwnProperty.call(counters, name) ? counters[name] : 0;
+export function getCount() {
+  return 0;
 }
 
 export function entries() {
-  return Object.entries(counters);
+  return [];
 }
 
 export function clearAll() {
-  for (const k of Object.keys(counters)) delete counters[k];
-  save();
+  return;
 }
 
 export default {

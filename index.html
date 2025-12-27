@@ -7,42 +7,7 @@
     <link rel="stylesheet" href="app.css">
   </head>
   <body>
-    <div class="wrap">
-      <main class="card" role="main" aria-labelledby="welcome-heading">
-        <h1 id="welcome-heading">Counter</h1>
-        <p class="lead">A simple counter — increment, decrement or reset the value.</p>
-
-        <div class="controls" aria-hidden="false">
-          <label for="username" class="label visually-hidden">Username</label>
-          <div class="control-row">
-            <input id="username" type="text" placeholder="Enter your name" autocomplete="name" />
-            <span id="selectedCount" class="selected-count" aria-hidden="true">—</span>
-            <div class="actions">
-              <button id="decBtn" type="button" aria-label="Decrement">−</button>
-              <button id="incBtn" type="button" aria-label="Increment">+</button>
-              <button id="resetBtn" type="button">Reset</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="table-wrap">
-          <h2 class="table-heading">All counters</h2>
-          <table class="counters-table" aria-describedby="counters-desc">
-            <caption id="counters-desc" class="visually-hidden">List of user counters</caption>
-            <thead>
-              <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Count</th>
-              </tr>
-            </thead>
-            <tbody id="countersBody">
-              <!-- rows inserted here -->
-            </tbody>
-          </table>
-        </div>
-        <footer>Built for practice — <span id="year"></span></footer>
-      </main>
-    </div>
+    <div id="root"></div>
 
   <!-- Bundled script produced by webpack -->
   <script src="dist/main.js"></script>
