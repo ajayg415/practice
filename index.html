@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Welcome</title>
+    <link rel="stylesheet" href="app.css">
+  </head>
+  <body>
+    <div class="wrap">
+      <main class="card" role="main" aria-labelledby="welcome-heading">
+        <h1 id="welcome-heading">Welcome</h1>
+        <p class="lead">
+          A small starter page — enter your name and get a friendly greeting.
+        </p>
+
+        <div class="controls" aria-hidden="false">
+          <label for="name" style="display: none">Name</label>
+          <input
+            id="name"
+            type="text"
+            placeholder="Your name (optional)"
+            autocomplete="name"
+          />
+          <div class="actions">
+            <button id="greetBtn" type="button">Show greeting</button>
+            <button id="timeBtn" type="button" aria-pressed="false">
+              Show current time
+            </button>
+          </div>
+        </div>
+
+        <div id="greeting" role="status" aria-live="polite"></div>
+        <footer>Built for practice — <span id="year"></span></footer>
+      </main>
+    </div>
+
+    <script src="main.js"></script>
+  </body>
+</html>
