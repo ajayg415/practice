@@ -1,5 +1,5 @@
 // ui.js — DOM wiring and rendering for counters app
-import { increment, decrement, reset, getCount, entries } from './counters.js';
+import { increment, decrement, reset, getCount, entries, load } from './counters.js';
 
 const dom = {
   usernameInput: () => document.getElementById('username'),
@@ -21,11 +21,13 @@ function renderSelected() {
   const dec = dom.decBtn();
   const inc = dom.incBtn();
   const resetBtn = dom.resetBtn();
+  const selectedBadge = document.getElementById('selectedCount');
 
   // Small UX: show inline placeholder in the input when empty
   if (inc) inc.disabled = !name;
   if (dec) dec.disabled = !name || value <= 0;
   if (resetBtn) resetBtn.disabled = !name || value === 0;
+  if (selectedBadge) selectedBadge.textContent = name ? String(value) : '—';
 }
 
 function renderTable() {
@@ -47,6 +49,7 @@ function renderTable() {
   items.sort((a, b) => a[0].localeCompare(b[0]));
   for (const [name, count] of items) {
     const tr = document.createElement('tr');
+    if (name === getName()) tr.classList.add('selected');
     const nameTd = document.createElement('td');
     nameTd.textContent = name;
     const countTd = document.createElement('td');
@@ -113,6 +116,8 @@ function bind() {
 }
 
 export function initUI() {
+  // load persisted counters first
+  load();
   bind();
   renderSelected();
   renderTable();

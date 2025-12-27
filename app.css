@@ -106,6 +106,16 @@ input {
 .actions button { /* slightly smaller buttons when inline */
   padding: 0.45rem 0.75rem;
 }
+.selected-count {
+  display: inline-block;
+  min-width: 2.2rem;
+  text-align: center;
+  background: rgba(6,78,155,0.08);
+  color: #064e9b;
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  font-weight: 700;
+}
 .table-wrap {
   margin-top: 1.25rem;
 }
@@ -119,6 +129,9 @@ input {
   padding: 0.5rem 0.75rem;
   border-bottom: 1px solid rgba(11,39,77,0.06);
   text-align: left;
+}
+.counters-table tr.selected {
+  background: rgba(11,120,255,0.06);
 }
 .table-heading {
   margin: 0.5rem 0 0;
