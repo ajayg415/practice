@@ -9,20 +9,53 @@ import {
   resetAll
 } from "./store/counters/countersSlice.js";
 import { loadCounters, saveCounters } from "./utils.js";
+import {
+  fetchCountersFromFirestore,
+  saveCountersToFirestore,
+} from "./firebase.js";
 
 export default function App() {
   const [name, setName] = useState("");
   const dispatch = useDispatch();
   // initialize counters from localStorage once
   useEffect(() => {
-    dispatch(createCounters(loadCounters()));
-    // only run on mount; dispatch is stable but include to satisfy lint
+    let mounted = true;
+
+    async function init() {
+      // Try Firestore first, fall back to localStorage
+      const remote = await fetchCountersFromFirestore();
+      if (!mounted) return;
+      const local = loadCounters();
+      // Choose remote if it has any keys, otherwise use local
+      const initial = Object.keys(remote).length ? remote : local;
+      dispatch(createCounters(initial));
+    }
+
+    init();
+
+    return () => {
+      mounted = false;
+    };
   }, [dispatch]);
 
   const counters = useSelector((state) => state.counters);
 
   useEffect(() => {
-    saveCounters(counters);
+    // Persist to Firestore (async) and always keep localStorage in sync as a fast fallback.
+    let mounted = true;
+    async function persist() {
+      try {
+        await saveCountersToFirestore(counters);
+      } catch (e) {
+        // ignore
+      }
+      if (!mounted) return;
+      saveCounters(counters);
+    }
+    persist();
+    return () => {
+      mounted = false;
+    };
   }, [counters]);
 
   const currentValue =
