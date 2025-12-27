@@ -1,41 +1,99 @@
-// JavaScript copied from index.html <script> block
-// Purpose: move inline script into this separate file for maintainability
-
-// Simple, accessible interactivity
-const nameInput = document.getElementById("name");
-const greetBtn = document.getElementById("greetBtn");
-const timeBtn = document.getElementById("timeBtn");
-const out = document.getElementById("greeting");
+// Counter app behavior with per-user counters and table
+const usernameInput = document.getElementById("username");
+const counterEl = document.getElementById("counter");
+const incBtn = document.getElementById("incBtn");
+const decBtn = document.getElementById("decBtn");
+const resetBtn = document.getElementById("resetBtn");
+const countersBody = document.getElementById("countersBody");
 const year = document.getElementById("year");
+
+// Map of username -> count
+const counters = {};
+
+function getCurrentName() {
+	return usernameInput ? usernameInput.value.trim() : "";
+}
+
+function renderSelected() {
+	const name = getCurrentName();
+	const value = name && counters[name] !== undefined ? counters[name] : 0;
+	if (counterEl) counterEl.textContent = name ? String(value) : "—";
+	if (decBtn) decBtn.disabled = !name || value <= 0;
+	if (incBtn) incBtn.disabled = !name;
+	if (resetBtn) resetBtn.disabled = !name || value === 0;
+}
+
+function renderTable() {
+	if (!countersBody) return;
+	// Clear
+	countersBody.innerHTML = "";
+	const entries = Object.entries(counters);
+	if (entries.length === 0) {
+		const tr = document.createElement("tr");
+		const td = document.createElement("td");
+		td.setAttribute("colspan", "2");
+		td.textContent = "No counters yet";
+		td.style.textAlign = "center";
+		tr.appendChild(td);
+		countersBody.appendChild(tr);
+		return;
+	}
+	// Sort by name
+	entries.sort((a, b) => a[0].localeCompare(b[0]));
+	for (const [name, count] of entries) {
+		const tr = document.createElement("tr");
+		const nameTd = document.createElement("td");
+		nameTd.textContent = name;
+		const countTd = document.createElement("td");
+		countTd.textContent = String(count);
+		tr.appendChild(nameTd);
+		tr.appendChild(countTd);
+		countersBody.appendChild(tr);
+	}
+}
+
+function ensureCounter(name) {
+	if (!counters[name]) counters[name] = 0;
+}
 
 year.textContent = new Date().getFullYear();
 
-function timeOfDayGreeting() {
-	const h = new Date().getHours();
-	if (h < 12) return "Good morning";
-	if (h < 18) return "Good afternoon";
-	return "Good evening";
+// Update selected UI when username changes
+if (usernameInput) {
+	usernameInput.addEventListener("input", () => {
+		renderSelected();
+	});
 }
 
-greetBtn.addEventListener("click", () => {
-	const name = nameInput.value.trim();
-	const base = timeOfDayGreeting();
-	out.textContent = name
-		? `${base}, ${name}! Welcome.`
-		: `${base}! Welcome.`;
+if (incBtn) incBtn.addEventListener("click", () => {
+	const name = getCurrentName();
+	if (!name) return;
+	ensureCounter(name);
+	counters[name] += 1;
+	renderSelected();
+	renderTable();
 });
 
-timeBtn.addEventListener("click", () => {
-	const now = new Date();
-	timeBtn.setAttribute(
-		"aria-pressed",
-		timeBtn.getAttribute("aria-pressed") === "true" ? "false" : "true"
-	);
-	out.textContent = `Current local time: ${now.toLocaleTimeString()}`;
+if (decBtn) decBtn.addEventListener("click", () => {
+	const name = getCurrentName();
+	if (!name) return;
+	ensureCounter(name);
+	counters[name] = Math.max(0, counters[name] - 1);
+	renderSelected();
+	renderTable();
 });
 
-// announce a greeting on first load (non-intrusive)
+if (resetBtn) resetBtn.addEventListener("click", () => {
+	const name = getCurrentName();
+	if (!name) return;
+	ensureCounter(name);
+	counters[name] = 0;
+	renderSelected();
+	renderTable();
+});
+
 window.addEventListener("load", () => {
-	out.textContent = `${timeOfDayGreeting()}!`;
+	renderSelected();
+	renderTable();
 });
 
