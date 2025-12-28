@@ -1,71 +1,27 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { API_URL } from "./config";
-
-const TODOS_KEY = "practice:todos:v1";
+import React, { useState, useMemo } from "react";
+import { useGetTodosQuery, useUpdateTodoMutation } from "./store/api";
 
 export default function App() {
-  const [todos, setTodos] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    let mounted = true;
-    async function fetchTodos() {
-      setLoading(true);
-      setError(null);
-      try {
-        // Fetch from configured API endpoint
-        const res = await fetch(API_URL);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        if (!mounted) return;
-        // hydrate with local overrides if available
-        const localRaw = window.localStorage.getItem(TODOS_KEY);
-        const local = localRaw ? JSON.parse(localRaw) : null;
-        if (local && Array.isArray(local) && local.length) {
-          // prefer local saved todos (user interactions)
-          setTodos(local);
-        } else {
-          setTodos(data);
-        }
-      } catch (e) {
-        if (!mounted) return;
-        setError(e.message || "Failed to fetch todos");
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    }
-    fetchTodos();
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  // search/filter state
+  const { data: todos = [], isLoading, isError, error } = useGetTodosQuery();
+  const [updateTodo] = useUpdateTodoMutation();
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
-    if (!query) return todos;
+    if (!query) return todos || [];
     const q = query.toLowerCase();
-    return todos.filter((t) => (t.title || "").toLowerCase().includes(q));
+    return (todos || []).filter((t) => (t.title || "").toLowerCase().includes(q));
   }, [todos, query]);
 
-  // toggle complete locally
-  function toggleComplete(id) {
-    setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)));
+  async function toggleComplete(id) {
+    const item = (todos || []).find((t) => t.id === id);
+    if (!item) return;
+    try {
+      await updateTodo({ id, completed: !item.completed }).unwrap();
+    } catch (e) {
+      // show error via console; UI already optimistically updated
+      console.error('Failed to update todo:', e);
+    }
   }
-
-  // persist todos locally with debounce
-  useEffect(() => {
-    const handle = setTimeout(() => {
-      try {
-        window.localStorage.setItem(TODOS_KEY, JSON.stringify(todos));
-      } catch (e) {
-        // ignore
-      }
-    }, 500);
-    return () => clearTimeout(handle);
-  }, [todos]);
 
   return (
     <div className="wrap">
@@ -82,8 +38,8 @@ export default function App() {
             style={{ padding: 6, width: '100%', maxWidth: 400 }}
           />
         </div>
-        {loading && <p>Loading todos…</p>}
-        {error && <p style={{ color: "red" }}>Error: {error}</p>}
+        {isLoading && <p>Loading todos…</p>}
+        {isError && <p style={{ color: "red" }}>Error: {error?.toString()}</p>}
 
         {!loading && !error && (
           <div className="table-wrap">
@@ -100,7 +56,7 @@ export default function App() {
                 </tr>
               </thead>
               <tbody>
-                {todos.length === 0 ? (
+                {(todos || []).length === 0 ? (
                   <tr>
                     <td colSpan={3} style={{ textAlign: "center" }}>
                       No todos
