@@ -1,9 +1,6 @@
-import { getFirestore } from "firebase/firestore";
 import app from "./firebaseConfig";
 
 import { getDatabase, ref, set, push, get } from "firebase/database";
-
-const db = getFirestore();
 
 /**
  * Fetch counters object from Firestore.
@@ -36,5 +33,3 @@ export async function saveCountersToFirestore(counters) {
       console.log("error: ", error.message);
     });
 }
-
-export { db };
