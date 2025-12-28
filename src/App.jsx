@@ -1,166 +1,78 @@
 import React, { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import {
-  addCounter,
-  increment,
-  decrement,
-  reset as resetCounter,
-  createCounters,
-  resetAll,
-} from "./store/counters/countersSlice.js";
-import { loadCounters, saveCounters } from "./utils.js";
-import {
-  fetchCountersFromFirestore,
-  saveCountersToFirestore,
-} from "./firebase.js";
 
 export default function App() {
-  const [name, setName] = useState("");
-  const dispatch = useDispatch();
-  // initialize counters from localStorage once
+  const [todos, setTodos] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   useEffect(() => {
     let mounted = true;
-
-    async function init() {
-      // Try Firestore first, fall back to localStorage
-      const remote = await fetchCountersFromFirestore() ?? {};
-      if (!mounted) return;
-      const local = loadCounters();
-      // Choose remote if it has any keys, otherwise use local
-      const initial = Object.keys(remote).length ? remote : local;
-      dispatch(createCounters(initial));
+    async function fetchTodos() {
+      setLoading(true);
+      setError(null);
+      try {
+        // Example public todos API
+        const res = await fetch("https://jsonplaceholder.typicode.com/todos?_limit=20");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (!mounted) return;
+        setTodos(data);
+      } catch (e) {
+        if (!mounted) return;
+        setError(e.message || "Failed to fetch todos");
+      } finally {
+        if (mounted) setLoading(false);
+      }
     }
-
-    init();
-
+    fetchTodos();
     return () => {
       mounted = false;
     };
-  }, [dispatch]);
-
-  const counters = useSelector((state) => state.counters);
-
-  useEffect(() => {
-    // Persist to Firestore (async) and always keep localStorage in sync as a fast fallback.
-    // saveCountersToFirestore(counters);
-    saveCounters(counters);
-  }, [counters]);
-
-  const currentValue =
-    name && counters[name] !== undefined ? counters[name] : 0;
-
-  function ensure(nameKey) {
-    if (!nameKey) return;
-    if (counters[nameKey] === undefined) {
-      // setCounters(prev => ({ ...prev, [nameKey]: 0 }));
-      dispatch(addCounter(nameKey));
-    }
-  }
-
-  function inc() {
-    if (!name) return;
-    ensure(name);
-    // setCounters(prev => ({ ...prev, [name]: (prev[name] || 0) + 1 }));
-    dispatch(increment(name));
-  }
-
-  function dec() {
-    if (!name) return;
-    ensure(name);
-    // setCounters(prev => ({ ...prev, [name]: Math.max(0, (prev[name] || 0) - 1) }));
-    dispatch(decrement(name));
-  }
-
-  function reset() {
-    if (!name) return;
-    ensure(name);
-    // setCounters(prev => ({ ...prev, [name]: 0 }));
-    dispatch(resetCounter(name));
-  }
-
-  function selectRow(selectedName) {
-    setName(selectedName);
-  }
-
-  const entries = Object.entries(counters).sort((a, b) =>
-    a[0].localeCompare(b[0])
-  );
-
-  const saveToDb = () => {
-    saveCountersToFirestore(counters);
-  }
+  }, []);
 
   return (
     <div className="wrap">
       <main className="card" role="main" aria-labelledby="welcome-heading">
-        <h1 id="welcome-heading">React Counter</h1>
-        <p className="lead">
-          Per-user counters — enter a name, then use the controls.
-        </p>
+        <h1 id="welcome-heading">Todos</h1>
+        <p className="lead">Fetch and display todos from a test API.</p>
 
-        <div className="controls">
-          <div className="control-row">
-            <input
-              id="username"
-              type="text"
-              placeholder="Enter your name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <span id="selectedCount" className="selected-count">
-              {name ? currentValue : "—"}
-            </span>
-            <div className="actions">
-              <button onClick={dec} disabled={!name || currentValue <= 0}>
-                −
-              </button>
-              <button onClick={inc} disabled={!name}>
-                +
-              </button>
-              <button onClick={reset} disabled={!name || currentValue === 0}>
-                Reset
-              </button>
-              <button onClick={() => dispatch(resetAll())}>Reset All</button>
-              <button onClick={saveToDb}>Save</button>
-            </div>
-          </div>
-        </div>
+        {loading && <p>Loading todos…</p>}
+        {error && <p style={{ color: "red" }}>Error: {error}</p>}
 
-        <div className="table-wrap">
-          <h2 className="table-heading">All counters</h2>
-          <table className="counters-table" aria-describedby="counters-desc">
-            <caption id="counters-desc" className="visually-hidden">
-              List of user counters
-            </caption>
-            <thead>
-              <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Count</th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.length === 0 ? (
+        {!loading && !error && (
+          <div className="table-wrap">
+            <h2 className="table-heading">Todo list</h2>
+            <table className="counters-table" aria-describedby="todos-desc">
+              <caption id="todos-desc" className="visually-hidden">
+                List of todos fetched from API
+              </caption>
+              <thead>
                 <tr>
-                  <td colSpan={2} style={{ textAlign: "center" }}>
-                    No counters yet
-                  </td>
+                  <th scope="col">#</th>
+                  <th scope="col">Title</th>
+                  <th scope="col">Completed</th>
                 </tr>
-              ) : (
-                entries.map(([n, c]) => (
-                  <tr
-                    key={n}
-                    className={n === name ? "selected" : ""}
-                    onClick={() => selectRow(n)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <td>{n}</td>
-                    <td>{c}</td>
+              </thead>
+              <tbody>
+                {todos.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} style={{ textAlign: "center" }}>
+                      No todos
+                    </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ) : (
+                  todos.map((t) => (
+                    <tr key={t.id}>
+                      <td>{t.id}</td>
+                      <td>{t.title}</td>
+                      <td>{t.completed ? "✓" : "—"}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         <footer>
           Built for practice — <span id="year">{new Date().getFullYear()}</span>
