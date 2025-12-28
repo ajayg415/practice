@@ -1,35 +1,11 @@
-import app from "./firebaseConfig";
+// DEPRECATED: firebase helper moved to legacy. This file is a placeholder to avoid import errors.
 
-import { getDatabase, ref, set, push, get } from "firebase/database";
-
-/**
- * Fetch counters object from Firestore.
- * Returns an object mapping name -> number, or {} on error.
- */
 export async function fetchCountersFromFirestore() {
-  const db = getDatabase(app);
-  const dbRef = ref(db, "/counters");
-  const snapshot = await get(dbRef);
-  if (snapshot.exists()) {
-    const dbdata = Object.values(snapshot.val());
-    return dbdata.at(-1);
-  } else {
-    console.log("db does not exist");
-  }
+  console.warn('fetchCountersFromFirestore is deprecated; see legacy/ for archived implementation.');
+  return {};
 }
 
-/**
- * Save counters object to Firestore.
- * Accepts a plain object mapping name->number.
- */
-export async function saveCountersToFirestore(counters) {
-  const db = getDatabase(app);
-  const newDocRef = push(ref(db, "/counters"));
-  set(newDocRef, counters)
-    .then(() => {
-      console.log("data saved successfully");
-    })
-    .catch((error) => {
-      console.log("error: ", error.message);
-    });
+export async function saveCountersToFirestore() {
+  console.warn('saveCountersToFirestore is deprecated; see legacy/ for archived implementation.');
+  return false;
 }

@@ -1,9 +1,2 @@
-import { configureStore } from "@reduxjs/toolkit";
-
-import countersReducer from "./counters/countersSlice";
-
-export const store = configureStore({
-    reducer: {
-        counters: countersReducer
-    }
-});
+// DEPRECATED: store archived to legacy. Keep a placeholder export to avoid import errors.
+export const store = null;

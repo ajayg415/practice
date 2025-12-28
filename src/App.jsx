@@ -1,4 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
+import { API_URL } from "./config";
+
+const TODOS_KEY = "practice:todos:v1";
 
 export default function App() {
   const [todos, setTodos] = useState([]);
@@ -11,12 +14,20 @@ export default function App() {
       setLoading(true);
       setError(null);
       try {
-        // Example public todos API
-        const res = await fetch("https://jsonplaceholder.typicode.com/todos?_limit=20");
+        // Fetch from configured API endpoint
+        const res = await fetch(API_URL);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (!mounted) return;
-        setTodos(data);
+        // hydrate with local overrides if available
+        const localRaw = window.localStorage.getItem(TODOS_KEY);
+        const local = localRaw ? JSON.parse(localRaw) : null;
+        if (local && Array.isArray(local) && local.length) {
+          // prefer local saved todos (user interactions)
+          setTodos(local);
+        } else {
+          setTodos(data);
+        }
       } catch (e) {
         if (!mounted) return;
         setError(e.message || "Failed to fetch todos");
@@ -30,12 +41,47 @@ export default function App() {
     };
   }, []);
 
+  // search/filter state
+  const [query, setQuery] = useState("");
+
+  const filtered = useMemo(() => {
+    if (!query) return todos;
+    const q = query.toLowerCase();
+    return todos.filter((t) => (t.title || "").toLowerCase().includes(q));
+  }, [todos, query]);
+
+  // toggle complete locally
+  function toggleComplete(id) {
+    setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)));
+  }
+
+  // persist todos locally with debounce
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      try {
+        window.localStorage.setItem(TODOS_KEY, JSON.stringify(todos));
+      } catch (e) {
+        // ignore
+      }
+    }, 500);
+    return () => clearTimeout(handle);
+  }, [todos]);
+
   return (
     <div className="wrap">
       <main className="card" role="main" aria-labelledby="welcome-heading">
         <h1 id="welcome-heading">Todos</h1>
         <p className="lead">Fetch and display todos from a test API.</p>
 
+        <div style={{ marginBottom: 12 }}>
+          <input
+            aria-label="Search todos"
+            placeholder="Search todos"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            style={{ padding: 6, width: '100%', maxWidth: 400 }}
+          />
+        </div>
         {loading && <p>Loading todos…</p>}
         {error && <p style={{ color: "red" }}>Error: {error}</p>}
 
@@ -61,8 +107,8 @@ export default function App() {
                     </td>
                   </tr>
                 ) : (
-                  todos.map((t) => (
-                    <tr key={t.id}>
+                  filtered.map((t) => (
+                    <tr key={t.id} style={{ cursor: 'pointer' }} onClick={() => toggleComplete(t.id)}>
                       <td>{t.id}</td>
                       <td>{t.title}</td>
                       <td>{t.completed ? "✓" : "—"}</td>
