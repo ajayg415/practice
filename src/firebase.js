@@ -1,70 +1,43 @@
-import { initializeApp, getApps } from "firebase/app";
-import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
-import firebaseConfig from "./firebaseConfig";
+import app from "./firebaseConfig";
 
-// Initialize Firebase app (safe if already initialized)
-if (!getApps().length) {
-  initializeApp(firebaseConfig);
-}
+import { getDatabase, ref, set, get } from "firebase/database";
 
-const db = getFirestore();
-const COUNTERS_DOC_REF = doc(db, "counters", "data");
-
-// Log basic runtime info to help debugging
-try {
-  const apps = getApps();
-  console.log("Firebase apps:", apps.length);
-  if (apps.length) {
-    // app options may contain projectId
-    // eslint-disable-next-line no-console
-    console.log("Firebase projectId:", apps[0]?.options?.projectId || firebaseConfig.projectId);
-  }
-  // document path
-  // eslint-disable-next-line no-console
-  console.log("Firestore doc path:", COUNTERS_DOC_REF.path);
-} catch (e) {
-  console.warn("Could not log Firebase runtime info", e);
-}
+const db = getDatabase(app);
 
 /**
- * Fetch counters object from Firestore.
+ * Fetch counters object from Realtime Database.
  * Returns an object mapping name -> number, or {} on error.
  */
-export async function fetchCountersFromFirestore() {
+export async function fetchCountersFromDatabase() {
   try {
-    const snap = await getDoc(COUNTERS_DOC_REF);
-    if (!snap.exists()) return {};
-    const data = snap.data();
-    console.log(`Fetched counters from Firestore: ${JSON.stringify(data)}`);
-    // Assume the document stores the counters map directly
-    return typeof data === "object" && data ? data : {};
+    const dbRef = ref(db, "/counters");
+    const snapshot = await get(dbRef);
+    if (snapshot.exists()) {
+      console.log("Fetched counters from Realtime DB:", snapshot.val());
+      return snapshot.val();
+    } else {
+      console.log("counters path does not exist in Realtime DB");
+      return {};
+    }
   } catch (e) {
-    console.error("Error fetching counters from Firestore:", e);
-    // swallow errors and return empty
+    console.error("Error fetching counters from Realtime DB:", e);
     return {};
   }
 }
 
 /**
- * Save counters object to Firestore.
- * Accepts a plain object mapping name->number.
+ * Save counters object to Realtime Database at a fixed path
+ * (overwrites the data at `/counters`). This prevents creating
+ * new child nodes (push) and keeps a single counters object.
  */
-export async function saveCountersToFirestore(counters) {
+export async function saveCountersToDatabase(counters) {
   try {
-    console.log(`Saving counters to Firestore: ${JSON.stringify(counters)}`);
-    await setDoc(COUNTERS_DOC_REF, counters || {});
-    // verify by reading back immediately
-    try {
-      const snap = await getDoc(COUNTERS_DOC_REF);
-      console.log("Post-save document exists:", snap.exists());
-      console.log("Post-save doc data:", snap.exists() ? snap.data() : null);
-    } catch (err) {
-      console.error("Error verifying saved document:", err);
-    }
-    console.log("Saved counters to Firestore successfully.");
+    const dbRef = ref(db, "/counters");
+    await set(dbRef, counters || {});
+    console.log("Saved counters to Realtime DB successfully.");
     return true;
   } catch (e) {
-    console.error("Error saving counters to Firestore:", e);
+    console.error("Error saving counters to Realtime DB:", e);
     return false;
   }
 }

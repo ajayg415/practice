@@ -6,7 +6,7 @@ import {
   decrement,
   reset as resetCounter,
   createCounters,
-  resetAll
+  resetAll,
 } from "./store/counters/countersSlice.js";
 import { loadCounters, saveCounters } from "./utils.js";
 import {
@@ -24,6 +24,7 @@ export default function App() {
     async function init() {
       // Try Firestore first, fall back to localStorage
       const remote = await fetchCountersFromFirestore();
+      console.log(remote)
       if (!mounted) return;
       const local = loadCounters();
       // Choose remote if it has any keys, otherwise use local
@@ -42,20 +43,8 @@ export default function App() {
 
   useEffect(() => {
     // Persist to Firestore (async) and always keep localStorage in sync as a fast fallback.
-    let mounted = true;
-    async function persist() {
-      try {
-        await saveCountersToFirestore(counters);
-      } catch (e) {
-        // ignore
-      }
-      if (!mounted) return;
-      saveCounters(counters);
-    }
-    persist();
-    return () => {
-      mounted = false;
-    };
+    // saveCountersToFirestore(counters);
+    saveCounters(counters);
   }, [counters]);
 
   const currentValue =
@@ -98,6 +87,10 @@ export default function App() {
     a[0].localeCompare(b[0])
   );
 
+  const saveToDb = () => {
+    saveCountersToFirestore(counters);
+  }
+
   return (
     <div className="wrap">
       <main className="card" role="main" aria-labelledby="welcome-heading">
@@ -128,9 +121,8 @@ export default function App() {
               <button onClick={reset} disabled={!name || currentValue === 0}>
                 Reset
               </button>
-              <button onClick={() => dispatch(resetAll())}>
-                Reset All
-              </button>
+              <button onClick={() => dispatch(resetAll())}>Reset All</button>
+              <button onClick={saveToDb}>Save</button>
             </div>
           </div>
         </div>

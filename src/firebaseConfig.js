@@ -1,16 +1,6 @@
-// Paste your Firebase Web SDK config object here.
-// You can find this in the Firebase Console → Project settings → Your apps → Firebase SDK snippet.
-// Example:
-// export default {
-//   apiKey: "...",
-//   authDomain: "your-app.firebaseapp.com",
-//   projectId: "your-app-id",
-//   storageBucket: "your-app.appspot.com",
-//   messagingSenderId: "...",
-//   appId: "..."
-// };
+import { initializeApp } from "firebase/app";
 
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: "AIzaSyBWPk3njRgBSKFkNWvedAhUfCLa_CA0xSg",
   authDomain: "rkt-counter.firebaseapp.com",
   databaseURL: "https://rkt-counter-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -21,4 +11,6 @@ const firebaseConfig = {
   measurementId: "G-F19DC4Q8Y7"
 };
 
-export default firebaseConfig;
+const app = initializeApp(firebaseConfig);
+
+export default app;
