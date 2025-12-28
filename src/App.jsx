@@ -23,8 +23,7 @@ export default function App() {
 
     async function init() {
       // Try Firestore first, fall back to localStorage
-      const remote = await fetchCountersFromFirestore();
-      console.log(remote)
+      const remote = await fetchCountersFromFirestore() ?? {};
       if (!mounted) return;
       const local = loadCounters();
       // Choose remote if it has any keys, otherwise use local

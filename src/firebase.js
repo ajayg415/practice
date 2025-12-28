@@ -1,45 +1,40 @@
+import { getFirestore } from "firebase/firestore";
 import app from "./firebaseConfig";
 
-import { getDatabase, ref, set, get } from "firebase/database";
+import { getDatabase, ref, set, push, get } from "firebase/database";
 
-const db = getDatabase(app);
+const db = getFirestore();
 
 /**
- * Fetch counters object from Realtime Database.
+ * Fetch counters object from Firestore.
  * Returns an object mapping name -> number, or {} on error.
  */
-export async function fetchCountersFromDatabase() {
-  try {
-    const dbRef = ref(db, "/counters");
-    const snapshot = await get(dbRef);
-    if (snapshot.exists()) {
-      console.log("Fetched counters from Realtime DB:", snapshot.val());
-      return snapshot.val();
-    } else {
-      console.log("counters path does not exist in Realtime DB");
-      return {};
-    }
-  } catch (e) {
-    console.error("Error fetching counters from Realtime DB:", e);
-    return {};
+export async function fetchCountersFromFirestore() {
+  const db = getDatabase(app);
+  const dbRef = ref(db, "/counters");
+  const snapshot = await get(dbRef);
+  if (snapshot.exists()) {
+    const dbdata = Object.values(snapshot.val());
+    return dbdata.at(-1);
+  } else {
+    console.log("db does not exist");
   }
 }
 
 /**
- * Save counters object to Realtime Database at a fixed path
- * (overwrites the data at `/counters`). This prevents creating
- * new child nodes (push) and keeps a single counters object.
+ * Save counters object to Firestore.
+ * Accepts a plain object mapping name->number.
  */
-export async function saveCountersToDatabase(counters) {
-  try {
-    const dbRef = ref(db, "/counters");
-    await set(dbRef, counters || {});
-    console.log("Saved counters to Realtime DB successfully.");
-    return true;
-  } catch (e) {
-    console.error("Error saving counters to Realtime DB:", e);
-    return false;
-  }
+export async function saveCountersToFirestore(counters) {
+  const db = getDatabase(app);
+  const newDocRef = push(ref(db, "/counters"));
+  set(newDocRef, counters)
+    .then(() => {
+      console.log("data saved successfully");
+    })
+    .catch((error) => {
+      console.log("error: ", error.message);
+    });
 }
 
 export { db };
